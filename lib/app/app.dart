@@ -31,6 +31,7 @@ class _GoogleDocsAppState extends ConsumerState<GoogleDocsApp> {
     }
 
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
         final isAuthenticated = ref.watch(_isAuthenticatedProvider);
         return isAuthenticated ? routesLoggedIn : routesLoggedOut;

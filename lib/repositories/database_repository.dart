@@ -56,7 +56,9 @@ class DatabaseRepository with RepositoryExceptionMixin {
   Future<DocumentPageData> _getPage(String documentId) async {
     final docRef = _database.collection(CollectionNames.pages).doc(documentId);
     final doc = await docRef.get();
-    return DocumentPageData.fromMap(doc.data()!);
+    var docData = doc.data();
+    var documentData = {"id": doc.id, ...?docData};
+    return DocumentPageData.fromMap(documentData);
   }
 
   Future<List<DocumentPageData>> getAllPages(String userId) async {
@@ -64,12 +66,14 @@ class DatabaseRepository with RepositoryExceptionMixin {
   }
 
   Future<List<DocumentPageData>> _getAllPages(String userId) async {
-    final resultDocs = await _database
+    final resultDocs = _database
         .collection(CollectionNames.pages)
         .where('owner', isEqualTo: userId);
     final result = await resultDocs.get();
-    return result.docs.map((element) {
-      return DocumentPageData.fromMap(element.data());
+    return result.docs.map((doc) {
+      var docData = doc.data();
+      var documentData = {"id": doc.id, ...docData};
+      return DocumentPageData.fromMap(documentData);
     }).toList();
   }
 
