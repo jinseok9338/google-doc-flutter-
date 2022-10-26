@@ -1,14 +1,15 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_docs_clone/app/constants.dart';
+import 'package:google_docs_clone/app/firebase.dart';
 import 'package:google_docs_clone/app/state/state.dart';
 import 'package:google_docs_clone/repositories/repositories.dart';
 
 abstract class Dependency {
-  static Provider<Client> get client => _clientProvider;
-  static Provider<Database> get database => _databaseProvider;
-  static Provider<Account> get account => _accountProvider;
-  static Provider<Realtime> get realtime => _realtimeProvider;
+  static Provider<FirebaseFirestore> get database => _databaseProvider;
+  static Provider<FirebaseAuth> get account => _accountProvider;
+  static Provider<FirebaseFirestore> get realtime => _realtimeProvider;
 }
 
 abstract class Repository {
@@ -22,19 +23,8 @@ abstract class AppState {
       AuthService.provider;
 }
 
-final _clientProvider = Provider<Client>(
-  (ref) => Client()
-    ..setProject(appwriteProjectId)
-    ..setSelfSigned(status: true)
-    ..setEndpoint(appwriteEndpoint),
-);
+final _databaseProvider = Provider<FirebaseFirestore>((ref) => firestore);
 
-final _databaseProvider =
-    Provider<Database>((ref) => Database(ref.read(_clientProvider)));
+final _accountProvider = Provider<FirebaseAuth>((ref) => firebaseAuth);
 
-final _accountProvider = Provider<Account>(
-  (ref) => Account(ref.read(_clientProvider)),
-);
-
-final _realtimeProvider =
-    Provider<Realtime>((ref) => Realtime(ref.read(_clientProvider)));
+final _realtimeProvider = Provider<FirebaseFirestore>((ref) => firestore);

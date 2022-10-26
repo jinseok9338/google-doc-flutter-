@@ -10,7 +10,7 @@ import 'package:routemaster/routemaster.dart';
 final _documentsProvider = FutureProvider<List<DocumentPageData>>((ref) {
   return ref
       .read(Repository.database)
-      .getAllPages(ref.read(AuthService.provider).user!.$id);
+      .getAllPages(ref.read(AuthService.provider).user!.uid);
 });
 
 class AllDocumentsPopup extends ConsumerStatefulWidget {

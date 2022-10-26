@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:appwrite/appwrite.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_docs_clone/app/utils.dart';
 
 class RepositoryException implements Exception {
@@ -24,7 +24,7 @@ mixin RepositoryExceptionMixin {
   }) async {
     try {
       return await computation;
-    } on AppwriteException catch (e) {
+    } on FirebaseException catch (e) {
       logger.warning(e.message, e);
       throw RepositoryException(
           message: e.message ?? 'An undefined error occured');

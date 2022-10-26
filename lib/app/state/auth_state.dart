@@ -1,5 +1,6 @@
-import 'package:appwrite/models.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_docs_clone/app/firebase.dart';
 import 'package:google_docs_clone/app/providers.dart';
 import 'package:google_docs_clone/app/state/state.dart';
 import 'package:google_docs_clone/app/utils.dart';
@@ -20,24 +21,39 @@ class AuthService extends StateNotifier<AuthState> {
 
   final Reader _read;
 
+  get userName => null;
+
   Future<void> refresh() async {
     try {
-      final user = await _read(Repository.auth).get();
-      setUser(user);
+      firebaseAuth.authStateChanges().listen((user) {
+        if (user != null) {
+          setUser(user);
+        } else {
+          logger.severe('Not authenticated');
+          state = const AuthState.unauthenticated();
+        }
+      });
     } on RepositoryException catch (_) {
-      logger.info('Not authenticated');
+      logger.severe('Not authenticated');
+      state = const AuthState.unauthenticated();
+    }
+  }
+  // this is the problem listen to the auth state rather than doing it manually
+
+  void setUser(User? user) {
+    if (user != null) {
+      var userName = user.displayName;
+      logger.info('Authentication successful, setting $userName');
+      state = state.copyWith(user: user, isLoading: false);
+    } else {
+      logger.severe('Authentication Failed');
       state = const AuthState.unauthenticated();
     }
   }
 
-  void setUser(User user) {
-    logger.info('Authentication successful, setting $user');
-    state = state.copyWith(user: user, isLoading: false);
-  }
-
   Future<void> signOut() async {
     try {
-      await _read(Repository.auth).deleteSession(sessionId: 'current');
+      await _read(Repository.auth).deleteSession();
       logger.info('Sign out successful');
       state = const AuthState.unauthenticated();
     } on RepositoryException catch (e) {

@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_docs_clone/app/providers.dart';
 import 'package:google_docs_clone/repositories/repository_exception.dart';
@@ -16,7 +15,7 @@ class AuthRepository with RepositoryExceptionMixin {
 
   final Reader _reader;
 
-  Account get _account => _reader(Dependency.account);
+  FirebaseAuth get _account => _reader(Dependency.account);
 
   Future<User> create({
     required String email,
@@ -24,8 +23,7 @@ class AuthRepository with RepositoryExceptionMixin {
     required String name,
   }) {
     return exceptionHandler(
-      _account.create(
-        userId: 'unique()',
+      _createUser(
         email: email,
         password: password,
         name: name,
@@ -33,24 +31,35 @@ class AuthRepository with RepositoryExceptionMixin {
     );
   }
 
-  Future<Session> createSession({
+  Future<User?> _createUser({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    await _account.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    await _account.currentUser?.updateDisplayName(name);
+    return _account.currentUser;
+  }
+
+  Future<UserCredential> createSession({
     required String email,
     required String password,
   }) {
     return exceptionHandler(
-      _account.createSession(email: email, password: password),
+      _account.signInWithEmailAndPassword(email: email, password: password),
     );
   }
 
-  Future<User> get() {
-    return exceptionHandler(
-      _account.get(),
-    );
+  Future<User?> get() async {
+    return _account.currentUser;
   }
 
-  Future<void> deleteSession({required String sessionId}) {
+  Future<void> deleteSession() {
     return exceptionHandler(
-      _account.deleteSession(sessionId: sessionId),
+      _account.signOut(),
     );
   }
 }

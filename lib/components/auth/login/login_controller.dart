@@ -31,7 +31,7 @@ class LoginController extends StateNotifier<ControllerStateBase> {
       final user = await _read(Repository.auth).get();
 
       /// Sets the global app state user.
-      _read(AppState.auth.notifier).setUser(user);
+      _read(AppState.auth.notifier).setUser(user!);
     } on RepositoryException catch (e) {
       state = state.copyWith(error: AppError(message: e.message));
     }

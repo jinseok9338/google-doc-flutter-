@@ -1,7 +1,6 @@
 import 'package:google_docs_clone/app/navigation/transition_page.dart';
 import 'package:google_docs_clone/components/auth/auth.dart';
 import 'package:routemaster/routemaster.dart';
-
 import 'package:google_docs_clone/components/document/document.dart';
 
 const _login = '/login';

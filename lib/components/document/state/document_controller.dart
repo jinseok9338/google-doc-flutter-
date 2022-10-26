@@ -87,13 +87,14 @@ class DocumentController extends StateNotifier<DocumentState> {
   }
 
   Future<void> _setupListeners() async {
+    // this is where I do the subscription
     final subscription =
         _read(Repository.database).subscribeToPage(pageId: state.id);
-    realtimeListener = subscription.stream.listen(
+    realtimeListener = subscription.listen(
       (event) {
-        final dId = event.payload['deviceId'];
+        final dId = event.data()?['deviceId'];
         if (_deviceId != dId) {
-          final delta = Delta.fromJson(jsonDecode(event.payload['delta']));
+          final delta = Delta.fromJson(jsonDecode(event.data()?['delta']));
           state.quillController?.compose(
             delta,
             state.quillController?.selection ??
@@ -109,7 +110,7 @@ class DocumentController extends StateNotifier<DocumentState> {
     _read(Repository.database).updateDelta(
       pageId: state.id,
       deltaData: DeltaData(
-        user: _read(AppState.auth).user!.$id,
+        user: _read(AppState.auth).user!.uid,
         delta: jsonEncode(delta.toJson()),
         deviceId: _deviceId,
       ),

@@ -30,7 +30,7 @@ class _NewDocumentPageState extends ConsumerState<NewDocumentPage> {
     try {
       await ref.read(Repository.database).createNewPage(
             documentId: documentId,
-            owner: ref.read(AppState.auth).user!.$id,
+            owner: ref.read(AppState.auth).user!.uid,
           );
 
       Routemaster.of(context).push('${AppRoutes.document}/$documentId');

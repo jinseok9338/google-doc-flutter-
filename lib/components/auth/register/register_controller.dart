@@ -29,9 +29,6 @@ class RegisterController extends StateNotifier<ControllerStateBase> {
       final user = await _read(Repository.auth)
           .create(email: email, password: password, name: name);
 
-      await _read(Repository.auth)
-          .createSession(email: email, password: password);
-
       /// Sets the global app state user.
       _read(AppState.auth.notifier).setUser(user);
     } on RepositoryException catch (e) {

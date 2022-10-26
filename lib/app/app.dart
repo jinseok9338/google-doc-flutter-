@@ -2,6 +2,7 @@ export 'utils.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_docs_clone/app/firebase.dart';
 import 'package:google_docs_clone/app/navigation/routes.dart';
 import 'package:google_docs_clone/app/providers.dart';
 import 'package:routemaster/routemaster.dart';

@@ -1,4 +1,4 @@
-import 'package:appwrite/appwrite.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_docs_clone/app/constants.dart';
 import 'package:google_docs_clone/app/providers.dart';
@@ -18,9 +18,9 @@ class DatabaseRepository with RepositoryExceptionMixin {
   static Provider<DatabaseRepository> get provider =>
       _databaseRepositoryProvider;
 
-  Realtime get _realtime => _read(Dependency.realtime);
+  FirebaseFirestore get _realtime => _read(Dependency.realtime);
 
-  Database get _database => _read(Dependency.database);
+  FirebaseFirestore get _database => _read(Dependency.database);
 
   Future<void> createNewPage({
     required String documentId,
@@ -35,24 +35,15 @@ class DatabaseRepository with RepositoryExceptionMixin {
     required String owner,
   }) async {
     Future.wait([
-      _database.createDocument(
-        collectionId: CollectionNames.pages,
-        documentId: documentId,
-        data: {
-          'owner': owner,
-          'title': null,
-          'content': null,
-        },
-      ),
-      _database.createDocument(
-        collectionId: CollectionNames.delta,
-        documentId: documentId,
-        data: {
-          'delta': null,
-          'user': null,
-          'deviceId': null,
-        },
-      ),
+      _database.collection(CollectionNames.pages).doc(documentId).set({
+        'owner': owner,
+        'title': null,
+        'content': null,
+      }),
+      _database
+          .collection(CollectionNames.delta)
+          .doc(documentId)
+          .set({'delta': null, 'user': null, 'deviceId': null}),
     ]);
   }
 
@@ -63,11 +54,9 @@ class DatabaseRepository with RepositoryExceptionMixin {
   }
 
   Future<DocumentPageData> _getPage(String documentId) async {
-    final doc = await _database.getDocument(
-      collectionId: CollectionNames.pages,
-      documentId: documentId,
-    );
-    return DocumentPageData.fromMap(doc.data);
+    final docRef = _database.collection(CollectionNames.pages).doc(documentId);
+    final doc = await docRef.get();
+    return DocumentPageData.fromMap(doc.data()!);
   }
 
   Future<List<DocumentPageData>> getAllPages(String userId) async {
@@ -75,12 +64,12 @@ class DatabaseRepository with RepositoryExceptionMixin {
   }
 
   Future<List<DocumentPageData>> _getAllPages(String userId) async {
-    final result = await _database.listDocuments(
-      collectionId: CollectionNames.pages,
-      queries: [Query.equal('owner', userId)],
-    );
-    return result.documents.map((element) {
-      return DocumentPageData.fromMap(element.data);
+    final resultDocs = await _database
+        .collection(CollectionNames.pages)
+        .where('owner', isEqualTo: userId);
+    final result = await resultDocs.get();
+    return result.docs.map((element) {
+      return DocumentPageData.fromMap(element.data());
     }).toList();
   }
 
@@ -88,11 +77,9 @@ class DatabaseRepository with RepositoryExceptionMixin {
       {required String documentId,
       required DocumentPageData documentPage}) async {
     return exceptionHandler(
-      _database.updateDocument(
-        collectionId: CollectionNames.pages,
-        documentId: documentId,
-        data: documentPage.toMap(),
-      ),
+      _database.collection(CollectionNames.pages).doc(documentId).set(
+            documentPage.toMap(),
+          ),
     );
   }
 
@@ -101,19 +88,18 @@ class DatabaseRepository with RepositoryExceptionMixin {
     required DeltaData deltaData,
   }) {
     return exceptionHandler(
-      _database.updateDocument(
-        collectionId: CollectionNames.delta,
-        documentId: pageId,
-        data: deltaData.toMap(),
-      ),
+      _database.collection(CollectionNames.delta).doc(pageId).set(
+            deltaData.toMap(),
+          ),
     );
   }
 
-  RealtimeSubscription subscribeToPage({required String pageId}) {
+  Stream<DocumentSnapshot<Map<String, dynamic>>> subscribeToPage(
+      {required String pageId}) {
     try {
-      return _realtime
-          .subscribe(['${CollectionNames.deltaDocumentsPath}.$pageId']);
-    } on AppwriteException catch (e) {
+      final docRef = _realtime.collection(CollectionNames.delta).doc(pageId);
+      return docRef.snapshots();
+    } on FirebaseException catch (e) {
       logger.warning(e.message, e);
       throw RepositoryException(
           message: e.message ?? 'An undefined error occured');
