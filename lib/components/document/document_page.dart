@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +15,9 @@ final _quillControllerProvider =
   final test = ref.watch(DocumentController.provider(id));
   return test.quillController;
 });
+
+final Stream<QuerySnapshot> _documentStream =
+    FirebaseFirestore.instance.collection('users').snapshots();
 
 class DocumentPage extends ConsumerWidget {
   const DocumentPage({
